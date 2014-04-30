@@ -1,0 +1,72 @@
+import com.twilio.sdk.TwilioRestClient;
+import com.twilio.sdk.TwilioRestException;
+import com.twilio.sdk.resource.factory.SmsFactory;
+import com.twilio.sdk.resource.instance.Account;
+import com.twilio.sdk.resource.instance.Sms;
+
+boolean messageSent = false;
+
+String myPhoneNumber = “(615) 338-5591″;
+String accountSID = “[your twilio acct no. here]″;
+String authToken = “[you twilio acct token here]″;
+
+String toPhoneNumber = “[your phone no. here]″;
+String smsMessage = “Hello!”;
+Account mainAccount;
+
+// For importing from Arduino:
+
+import processing.serial.*;
+Serial myPort;
+
+// For Processing:
+void setup () {
+size (600, 600);
+background(#C120D3);
+
+String portName = Serial.list()[4];
+myPort = new Serial(this, portName, 9600);
+
+TwilioRestClient client= new TwilioRestClient(accountSID, authToken);
+mainAccount = client.getAccount();
+
+noStroke();
+fill(255);
+ellipseMode(CENTER);
+ellipse(width/2, height/2, 100, 100);
+}
+
+void draw() {
+}
+
+void serialEvent (Serial myPort) {
+
+int inByte = myPort.read();
+println(inByte);
+
+if (inByte > 100) {
+fill(#550D5D);
+ellipse(width/2, height/2, 100, 100);
+sendSMS(toPhoneNumber, smsMessage);
+}
+}
+
+//This function will send an SMS as long as the account has been authenticated.
+void sendSMS(String toNumber, String message) {
+if (!messageSent) {
+messageSent = true;
+SmsFactory smsFactory = mainAccount.getSmsFactory();
+HashMap smsParams = new HashMap();
+smsParams.put(“To”, toNumber);
+smsParams.put(“From”, myPhoneNumber);
+smsParams.put(“Body”, message);
+try {
+Sms sms = smsFactory.create(smsParams);
+println(“SMS status = “+sms.getStatus());
+}
+catch (TwilioRestException e) {
+println(“SMS send Failed!”);
+e.printStackTrace();
+}
+}
+}
