@@ -1,0 +1,207 @@
+#include // Include servo library
+
+const int FwdPin = 2; // switch input
+const int BackPin = 3; //
+const int RightPin = 4; //
+const int LeftPin = 6; //
+
+const int switchPin = 7; // add a switch to another input pin – turns on and off
+
+const int potPin = A0; // speed control
+
+// start everything low
+int FwdButton = LOW;
+int BackButton = LOW;
+int LeftButton = LOW;
+int RightButton = LOW;
+int On = LOW;
+int wLeft = LOW;
+int wRight = LOW;
+
+// change speed
+float speedPot = 1.0;
+
+Servo servoLeft; // Declare left and right servos
+Servo servoRight;
+
+boolean running = false;
+
+void setup() // initialize all directional pins
+{
+
+Serial.begin(9600);
+
+pinMode(FwdPin, INPUT);
+pinMode(BackPin, INPUT);
+pinMode(RightPin, INPUT);
+pinMode(LeftPin, INPUT);
+pinMode(switchPin, INPUT); //switchpin
+
+// potentiometer pin
+// don’t need to declare analog pin mode
+
+pinMode(A0, INPUT);
+
+pinMode(8, INPUT); // Set right whisker pin to input
+pinMode(9, INPUT);
+
+servoLeft.attach(13); // Attach left signal to pin 13
+servoRight.attach(12); // Attach right signal to pin 12
+
+}
+
+void loop() // Main loop auto-repeats
+{
+FwdButton = digitalRead(FwdPin);
+BackButton = digitalRead(3);
+RightButton = digitalRead(4);
+LeftButton = digitalRead(6);
+On = digitalRead(switchPin);
+
+//speedPot = analogRead(potPin);
+
+//how we would map if we’re multiplying or dividing
+//speedPot = map(speedPot,0,1023,0.1,2.0);
+
+//this is how we map if adding and subtracting
+// speedPot = map(speedPot,0,1023,0,1000);
+
+//temp —
+//speedPot=1;
+
+//On = digitalRead(switchPin);
+
+if (On == HIGH) {
+delay(100);
+running = !running;
+}
+
+if(FwdButton == HIGH && running == true)
+{
+forward(0);
+}
+else if(BackButton == HIGH && running == true)
+{
+backward(0);
+}
+
+else if(RightButton == HIGH && running == true)
+{
+rightTurn(0);
+}
+
+else if(LeftButton == HIGH && running == true)
+{
+leftTurn(0);
+}
+
+if(running == false){
+stopServos();
+
+}
+
+//byte wLeft = digitalRead(5); // Copy left result to wLeft
+//byte wRight = digitalRead(7); // Copy right result to wRight
+
+if((wLeft == 0) && (wRight == 0)) // If both whiskers contact
+{
+// forward(1000); // Back up 1 second
+//leftTurn(800); // Turn left about 120 degrees
+}
+else if(wLeft == 0) // If only left whisker contact
+{
+// backward(1000); // Back up 1 second
+//rightTurn(400); // Turn right about 60 degrees
+}
+else if(wRight == 0) // If only right whisker contact
+{
+// backward(1000); // Back up 1 second
+// leftTurn(400); // Turn left about 60 degrees
+}
+else // Otherwise, no whisker contact
+{
+// forward(20); // Forward 1/50 of a second
+}
+
+debug();
+}
+
+void debug() {
+
+Serial.print(“FwdButton “);
+Serial.print(FwdButton);
+Serial.print(” “);
+
+Serial.print(“BackButton “);
+Serial.print(BackButton);
+Serial.print(” “);
+
+Serial.print(“LeftButton “);
+Serial.print(LeftButton);
+Serial.print(” “);
+
+Serial.print(“RightButton “);
+Serial.print(RightButton);
+Serial.print(” “);
+
+Serial.print(“On “);
+Serial.print(On);
+Serial.print(” “);
+
+Serial.print(“wLeft “);
+Serial.print(wLeft);
+Serial.print(” “);
+
+Serial.print(“wRight “);
+Serial.print(wRight);
+Serial.print(” “);
+
+Serial.print(“speedPot “);
+Serial.print(speedPot);
+Serial.print(” “);
+
+Serial.print(“running “);
+Serial.print(running);
+Serial.print(” “);
+
+Serial.println();
+}
+
+void forward(int time) {
+servoLeft.writeMicroseconds(1700+speedPot); // Left wheel counterclockwise
+servoRight.writeMicroseconds(1300-speedPot); // Right wheel clockwise
+
+// servoLeft.writeMicroseconds(1500*speedPot); // Left wheel counterclockwise
+// servoRight.writeMicroseconds(1500*-speedPot); // Right wheel clockwise
+
+delay(time); // Maneuver for time ms
+}
+
+void leftTurn(int time) // Left turn function
+{
+servoLeft.writeMicroseconds(1300-speedPot); // Left wheel clockwise
+servoRight.writeMicroseconds(1300-speedPot); // Right wheel clockwise
+delay(time); // Maneuver for time ms
+}
+
+void rightTurn (int time) // Right turn function
+{
+servoLeft.writeMicroseconds(1700+speedPot); // Left wheel counterclockwise
+servoRight.writeMicroseconds(1700+speedPot); // Right wheel counterclockwise
+delay(time); // Maneuver for time ms
+}
+
+void backward(int time) // Backward function
+{
+servoLeft.writeMicroseconds(1300-speedPot); // Left wheel clockwise
+servoRight.writeMicroseconds(1700+speedPot); // Right wheel counterclockwise
+delay(time); // Maneuver for time ms
+}
+
+void stopServos(){
+servoLeft.writeMicroseconds(1500); // us = 1600,1598,…1502,1500
+servoRight.writeMicroseconds(1500); // us = 1400,1402,…1498,1500
+delay(20);
+
+}
+
