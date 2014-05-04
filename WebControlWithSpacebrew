@@ -1,0 +1,90 @@
+import spacebrew.*;
+import processing.serial.*;
+
+String server="sandbox.spacebrew.cc";
+//String server="localhost";
+
+String name="TurnOnRobotEthernet";
+String description="Turning on the robot's two motors";
+
+Spacebrew spacebrewConnection;
+
+Serial myPort;  //the serial port
+
+void setup() {
+ size(600, 400);
+ background(#294F98);
+ 
+ spacebrewConnection = new Spacebrew( this );
+ 
+ // add each thing you publish to, in this case each of the 2 servos
+ spacebrewConnection.addSubscribe( "Went Forward.", "boolean" );
+ spacebrewConnection.addSubscribe( "Went Backward.", "boolean" );
+ spacebrewConnection.addSubscribe( "Went Left.", "boolean" );
+ spacebrewConnection.addSubscribe( "Went Right.", "boolean" );
+ spacebrewConnection.addSubscribe( "Stopped.", "boolean" );
+
+
+ spacebrewConnection.addPublish( "Go Forward!", true );
+ spacebrewConnection.addPublish( "Go Backward!", true );
+ spacebrewConnection.addPublish( "Go Left!", true );
+ spacebrewConnection.addPublish( "Go Right!", true );
+ spacebrewConnection.addPublish( "Stop!", true );
+
+
+ //spacebrewConnection.addPublish( "Right Wheel Rolled!", true );
+ 
+ // connect!
+ spacebrewConnection.connect("ws://"+server+":9000", name, description );
+ 
+ println("Available serial ports:");
+ println(Serial.list());
+ myPort = new Serial(this, Serial.list()[4], 9600);
+ myPort.bufferUntil('\n');
+}
+
+void draw() {                
+ 
+ if (spacebrewConnection.connected()) {
+   //print client name to screen
+   text("Connected as: " + name, width/2, 25);
+ } else {
+    text("You Are Not Connected to Spacebrew :( ", width/2, 25);
+ }
+}
+
+void serialEvent (Serial myPort) {
+  // get the ASCII String:
+ String inString = myPort.readStringUntil('\n');
+ println(inString);
+ spacebrewConnection.send("Went Forward.", true);
+ spacebrewConnection.send("Went Backward.", true);
+  spacebrewConnection.send("Went Left.", true);
+ spacebrewConnection.send("Went Right.", true);
+ spacebrewConnection.send("Stopped.", true);
+
+}
+
+void onBooleanMessage( String name, boolean value ){
+  println(name + " " + value);
+  if (name.equals("Went Forward.")) {
+    println("got front");
+    myPort.write('f');
+    
+  } else if (name.equals("Went Backward.")) {
+     myPort.write('b');
+      println("got back");
+      
+    } else if (name.equals("Went Left.")) {
+     myPort.write('l');
+      println("got left");
+      
+    } else if (name.equals("Went Right.")) {
+     myPort.write('r');
+      println("got right");
+
+    } else if (name.equals("Stopped.")) {
+     myPort.write('s');
+      println("got stop");
+  }
+}
